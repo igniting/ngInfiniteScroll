@@ -38,14 +38,21 @@ mod.directive 'infiniteScroll', ['$rootScope', '$window', '$timeout', ($rootScop
       windowBottom = $window.height() + $window.scrollTop()
       elementBottom = elem.offset().top + elem.height()
       remaining = elementBottom - windowBottom
-      shouldScroll = remaining <= $window.height() * scrollDistance
+      shouldScrollDown = remaining <= $window.height() * scrollDistance
+      shouldScrollUp = $window.scrollTop() == 0
 
-      if shouldScroll && scrollEnabled
-        if $rootScope.$$phase
-          scope.$eval attrs.infiniteScroll
-        else
-          scope.$apply attrs.infiniteScroll
-      else if shouldScroll
+      if scrollEnabled
+        if shouldScrollUp
+          if $rootScope.$$phase
+            scope.$eval attrs.infiniteScrollUp
+          else
+            scope.$apply attrs.infiniteScrollUp
+        else if shouldScrollDown
+          if $rootScope.$$phase
+            scope.$eval attrs.infiniteScrollDown
+          else
+            scope.$apply attrs.infiniteScrollDown
+      else if (shouldScrollUp || shouldScrollDown)
         checkWhenEnabled = true
 
     $window.on 'scroll', handler

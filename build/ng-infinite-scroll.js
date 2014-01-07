@@ -1,4 +1,4 @@
-/* ng-infinite-scroll - v1.0.0 - 2013-02-23 */
+/* ng-infinite-scroll - v1.0.0 - 2014-01-07 */
 var mod;
 
 mod = angular.module('infinite-scroll', []);
@@ -27,18 +27,27 @@ mod.directive('infiniteScroll', [
           });
         }
         handler = function() {
-          var elementBottom, remaining, shouldScroll, windowBottom;
+          var elementBottom, remaining, shouldScrollDown, shouldScrollUp, windowBottom;
           windowBottom = $window.height() + $window.scrollTop();
           elementBottom = elem.offset().top + elem.height();
           remaining = elementBottom - windowBottom;
-          shouldScroll = remaining <= $window.height() * scrollDistance;
-          if (shouldScroll && scrollEnabled) {
-            if ($rootScope.$$phase) {
-              return scope.$eval(attrs.infiniteScroll);
-            } else {
-              return scope.$apply(attrs.infiniteScroll);
+          shouldScrollDown = remaining <= $window.height() * scrollDistance;
+          shouldScrollUp = $window.scrollTop() === 0;
+          if (scrollEnabled) {
+            if (shouldScrollUp) {
+              if ($rootScope.$$phase) {
+                return scope.$eval(attrs.infiniteScrollUp);
+              } else {
+                return scope.$apply(attrs.infiniteScrollUp);
+              }
+            } else if (shouldScrollDown) {
+              if ($rootScope.$$phase) {
+                return scope.$eval(attrs.infiniteScrollDown);
+              } else {
+                return scope.$apply(attrs.infiniteScrollDown);
+              }
             }
-          } else if (shouldScroll) {
+          } else if (shouldScrollUp || shouldScrollDown) {
             return checkWhenEnabled = true;
           }
         };
