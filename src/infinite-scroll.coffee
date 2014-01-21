@@ -29,17 +29,37 @@ mod.directive 'infiniteScroll', ['$rootScope', '$window', '$timeout', ($rootScop
           checkWhenEnabled = false
           handler()
 
-    # infinite-scroll specifies a function to call when the window
+    container = $window
+
+    # infinite-scroll-container sets the container which we want to be
+    # infinte scrolled, instead of the whole window.
+    if attrs.infiniteScrollContainer?
+        value = $("." + attrs.infiniteScrollContainer)
+        if value?
+          container = value
+        else
+          throw new Exception("invalid infinite-scroll-container attribute.")
+
+    # infinite-scroll specifies a function to call when the window,
+    # or some other container specified by infinite-scroll-container,
     # is scrolled within a certain range from the bottom of the
     # document. It is recommended to use infinite-scroll-disabled
     # with a boolean that is set to true when the function is
     # called in order to throttle the function call.
     handler = ->
-      windowBottom = $window.height() + $window.scrollTop()
-      elementBottom = elem.offset().top + elem.height()
-      remaining = elementBottom - windowBottom
-      shouldScrollDown = remaining <= $window.height() * scrollDistance
-      shouldScrollUp = $window.scrollTop() == 0
+      if container == $window
+        containerBottom = container.height() + container.scrollTop()
+        elementBottom = elem.offset().top + elem.height()
+        containerTop = container.scrollTop()
+      else
+        containerBottom = container.height()
+        elementBottom = elem.offset().top - container.offset().top + elem.height()
+        containerTop = container.offset().top
+      elementTop = elem.offset().top
+      remainingBottom = elementBottom - containerBottom
+      shouldScrollDown = remainingBottom <= container.height() * scrollDistance
+      remainingTop = containerTop - elementTop
+      shouldScrollUp = remainingTop <= container.height() * scrollDistance
 
       if scrollEnabled
         if shouldScrollUp
@@ -55,9 +75,9 @@ mod.directive 'infiniteScroll', ['$rootScope', '$window', '$timeout', ($rootScop
       else if (shouldScrollUp || shouldScrollDown)
         checkWhenEnabled = true
 
-    $window.on 'scroll', handler
+    container.on 'scroll', handler
     scope.$on '$destroy', ->
-      $window.off 'scroll', handler
+      container.off 'scroll', handler
 
     $timeout (->
       if attrs.infiniteScrollImmediateCheck
